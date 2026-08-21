@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EmerPlan — Plan interactif</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2341c8ff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg0: #04070f; --bg1: #0a1428;
+    --cyan: #41c8ff; --amber: #ffb454;
+    --text: #dce9f8; --dim: #8aa2c4; --line: rgba(65,200,255,.16);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: 'Barlow Condensed', 'Segoe UI', sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(900px 420px at 50% -10%, rgba(65,200,255,.12), transparent 60%),
+      linear-gradient(180deg, var(--bg0), var(--bg1));
+    display: flex; flex-direction: column;
+  }
+
+  header {
+    height: 56px; flex-shrink: 0;
+    display: flex; align-items: center; gap: 18px;
+    padding: 0 18px;
+    background: rgba(10,20,40,.9);
+    border-bottom: 1px solid var(--line);
+  }
+  .back {
+    font-family: 'Share Tech Mono', monospace; font-size: 12px; letter-spacing: 1px;
+    color: var(--cyan); text-decoration: none; padding: 6px 12px;
+    border: 1px solid rgba(65,200,255,.35); border-radius: 6px; white-space: nowrap;
+    transition: background .2s;
+  }
+  .back:hover { background: rgba(65,200,255,.12); }
+  header h1 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 17px; letter-spacing: 3px; color: var(--cyan); white-space: nowrap;
+  }
+  header h1 span { color: var(--text); }
+  .hud {
+    margin-left: auto; display: flex; align-items: center; gap: 12px;
+    font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 2px; color: var(--dim);
+  }
+  .hud b { color: var(--amber); font-weight: normal; }
+  .hud button {
+    font-family: 'Share Tech Mono', monospace; font-size: 12px; letter-spacing: 1px;
+    background: rgba(65,200,255,.1); color: var(--cyan);
+    border: 1px solid rgba(65,200,255,.35); border-radius: 6px; padding: 6px 12px; cursor: pointer;
+  }
+  .hud button:hover { background: rgba(65,200,255,.2); }
+
+  #layout { display: flex; flex: 1; min-height: 0; }
+  aside {
+    width: 230px; flex-shrink: 0;
+    background: rgba(8,16,30,.85); border-right: 1px solid var(--line);
+    padding: 14px; overflow-y: auto;
+  }
+  aside h2 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px; letter-spacing: 2px; color: var(--dim); text-transform: uppercase; margin-bottom: 12px;
+  }
+  #groupList { list-style: none; }
+  #groupList li {
+    display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 7px;
+    cursor: pointer; font-size: 15px; letter-spacing: 1px; margin-bottom: 5px;
+    background: rgba(20,35,60,.6); border: 1px solid transparent;
+  }
+  #groupList li:hover { background: rgba(35,55,90,.6); }
+  #groupList li.active { border-color: var(--cyan); box-shadow: 0 0 12px rgba(65,200,255,.25); }
+  #groupList .dot { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 8px currentColor; }
+  #groupList .name { flex: 1; }
+  #groupList .count { font-family: 'Share Tech Mono', monospace; color: var(--dim); font-size: 11px; }
+
+  #viewport {
+    flex: 1; position: relative; overflow: hidden; cursor: grab;
+    background: #0b111d; touch-action: none;
+  }
+  #viewport.panning { cursor: grabbing; }
+  #world { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+  #plan { display: block; width: 100%; height: auto; user-select: none; -webkit-user-drag: none; }
+  #paths { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  #paths polyline {
+    fill: none; stroke-linecap: round; stroke-linejoin: round;
+    vector-effect: non-scaling-stroke; stroke-width: 4; opacity: .8;
+    transition: opacity .15s; pointer-events: stroke;
+  }
+  #paths polyline.hl { stroke-width: 7; opacity: 1; filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 6px var(--c)); }
+  #paths polyline.stealth { opacity: 0; }
+  #paths polyline.stealth.dimmed { opacity: 0; }
+  #paths polyline.stealth.hl { opacity: 1; stroke-width: 7; filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 6px var(--c)); }
+  #hotspots { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+  .hotspot {
+    position: absolute; border-radius: 50%; border: 2px solid #fff; cursor: pointer; pointer-events: auto;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity .15s;
+  }
+  .hotspot.dimmed { opacity: .12; }
+  .hotspot.hl { box-shadow: 0 0 10px 3px var(--c); }
+  .hotspot.stealth { opacity: 0; background: transparent; border-color: transparent; box-shadow: none; }
+  .hotspot.stealth.dimmed { opacity: 0; }
+  .hotspot.stealth.hl { opacity: 1; background: var(--c); border: 2px solid #fff; box-shadow: 0 0 10px 3px var(--c); }
+  .rect {
+    position: absolute; border: 3px solid var(--c); cursor: pointer; pointer-events: auto;
+    background: var(--cf); transition: opacity .15s;
+  }
+  .rect.hl { box-shadow: 0 0 12px 4px var(--c), inset 0 0 12px var(--c); }
+  .rect.dimmed { opacity: .12; }
+  .rect.stealth { opacity: 0; }
+  .rect.stealth.dimmed { opacity: 0; }
+  .rect.stealth.hl { opacity: 1; box-shadow: 0 0 12px 4px var(--c), inset 0 0 12px var(--c); }
+
+  #status {
+    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+    background: rgba(6,12,24,.88); border: 1px solid var(--line);
+    padding: 6px 16px; border-radius: 999px;
+    font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 1px;
+    color: var(--dim); pointer-events: none; z-index: 5; white-space: nowrap;
+  }
+
+  #notice {
+    display: none; position: absolute; inset: 0; z-index: 10;
+    align-items: center; justify-content: center; text-align: center;
+    background: rgba(4,7,15,.82);
+  }
+  #notice.open { display: flex; }
+  #notice .box {
+    max-width: 560px; padding: 40px 46px;
+    border: 1px solid rgba(65,200,255,.35); border-radius: 14px;
+    background: linear-gradient(165deg, rgba(16,34,62,.85), rgba(7,15,30,.9));
+  }
+  #notice h2 { font-size: 26px; letter-spacing: 2px; color: var(--cyan); margin-bottom: 14px; }
+  #notice p { color: var(--dim); font-size: 16px; line-height: 1.7; }
+  #notice code {
+    font-family: 'Share Tech Mono', monospace; font-size: 13px;
+    color: var(--amber); background: rgba(255,180,84,.08);
+    padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(255,180,84,.25);
+  }
+  #notice .back2 { display: inline-block; margin-top: 20px; }
+
+  @media (max-width: 860px) {
+    aside { display: none; }
+    header h1 { font-size: 14px; }
+    .hud b { display: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="index.html">← TABLEAU DE BORD</a>
+  <h1>EMERPLAN <span>// BOEING <span id="modelName">777</span></span></h1>
+  <div class="hud">
+    <span>STATUS : <b>STANDBY</b></span>
+    <button id="btnFit">AJUSTER</button>
+  </div>
+</header>
+
+<div id="layout">
+  <aside>
+    <h2>Éléments du plan</h2>
+    <ul id="groupList"></ul>
+  </aside>
+  <div id="viewport">
+    <div id="world">
+      <img id="plan" src="" draggable="false" alt="Plan">
+      <svg id="paths" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="hotspots"></div>
+    </div>
+    <div id="status"></div>
+    <div id="notice">
+      <div class="box">
+        <h2 id="noticeTitle">PLAN EN PRÉPARATION</h2>
+        <p id="noticeText"></p>
+        <a class="back back2" href="index.html">← RETOUR AU TABLEAU DE BORD</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  const MODELS = ["777-200", "777-300"];
+  const model = new URLSearchParams(location.search).get("model") || "777-200";
+  const IMG = "plans/" + model + "/plan.png";
+  const DATA_URL = "plans/" + model + "/donnees.json";
+
+  const viewport = document.getElementById("viewport");
+  const world = document.getElementById("world");
+  const planImg = document.getElementById("plan");
+  const svgPaths = document.getElementById("paths");
+  const hotspotsDiv = document.getElementById("hotspots");
+  const groupList = document.getElementById("groupList");
+  const status = document.getElementById("status");
+  const notice = document.getElementById("notice");
+
+  let W = 0, H = 0;
+  let zoom = 1, tx = 0, ty = 0;
+  let selected = null;
+  let data = {};
+  let pointers = new Map();
+  let panStart = null;
+  let pinchDist = null;
+  let moved = false;
+  let downTarget = null;
+  let hasImage = false;
+
+  document.getElementById("modelName").textContent = model;
+  document.title = "EmerPlan — Boeing " + model;
+
+  if (MODELS.indexOf(model) === -1) {
+    showNotice("APPAREIL INCONNU", "Le modèle « " + model + " » n'existe pas dans la flotte. Retournez au tableau de bord pour choisir un appareil.");
+    return;
+  }
+
+  function showNotice(title, text) {
+    document.getElementById("noticeTitle").textContent = title;
+    document.getElementById("noticeText").innerHTML = text;
+    notice.classList.add("open");
+  }
+
+  function initImage() {
+    W = planImg.naturalWidth; H = planImg.naturalHeight;
+    world.style.width = W + "px"; world.style.height = H + "px";
+    hasImage = true;
+    document.querySelector(".hud b").textContent = "OK";
+    fit();
+  }
+  planImg.addEventListener("load", initImage);
+  planImg.addEventListener("error", function () {
+    showNotice(
+      "PLAN EN PRÉPARATION",
+      "Le plan interactif du Boeing " + model + " sera bientôt disponible.<br>Ajoutez l'image du plan dans <code>plans/" + model + "/plan.png</code>.<br><br>Ouvrez cette page via un serveur (ex. GitHub Pages) pour charger l'image."
+    );
+  });
+  planImg.src = IMG;
+
+  fetch(DATA_URL)
+    .then(function (r) { if (!r.ok) throw new Error("no data"); return r.json(); })
+    .then(function (d) {
+      data = d && typeof d === "object" ? d : {};
+      Object.keys(data).forEach(function (g) {
+        if (!data[g].hotspots) data[g].hotspots = [];
+        if (!data[g].paths) data[g].paths = [];
+        if (!data[g].rects) data[g].rects = [];
+      });
+      render();
+    })
+    .catch(function () {
+      data = {};
+      render();
+    });
+
+  function fit() {
+    if (!W) return;
+    const r = viewport.getBoundingClientRect();
+    zoom = Math.min(r.width / W, r.height / H) * 0.95;
+    tx = (r.width - W * zoom) / 2;
+    ty = (r.height - H * zoom) / 2;
+    apply();
+  }
+
+  function apply() {
+    world.style.transform = "translate(" + tx + "px," + ty + "px) scale(" + zoom + ")";
+  }
+
+  function clampZoom(z) { return Math.min(8, Math.max(0.05, z)); }
+
+  function zoomAt(cx, cy, nz) {
+    nz = clampZoom(nz);
+    tx = cx - (cx - tx) * (nz / zoom);
+    ty = cy - (cy - ty) * (nz / zoom);
+    zoom = nz;
+    apply();
+  }
+
+  function screenToWorld(e) {
+    const r = viewport.getBoundingClientRect();
+    return {
+      x: (e.clientX - r.left - tx) / zoom,
+      y: (e.clientY - r.top - ty) / zoom
+    };
+  }
+
+  function hashCode(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    return Math.abs(h);
+  }
+
+  const PALETTE = ["#e6194B","#3cb44b","#ffe119","#4363d8","#f58231","#911eb4","#42d4f4","#f032e6","#bfef45","#469990","#dcbeff","#9A6324","#800000","#aaffc3","#808000","#ffd8b1","#000075","#f582c0","#00b0a0","#a9a9a9"];
+
+  function groupColor(gid) {
+    const g = data[gid];
+    return g && g.color ? g.color : PALETTE[hashCode(String(gid)) % PALETTE.length];
+  }
+
+  function render() {
+    hotspotsDiv.innerHTML = "";
+    svgPaths.innerHTML = "";
+    const svgNS = "http://www.w3.org/2000/svg";
+
+    Object.keys(data).forEach(function (gid) {
+      const g = data[gid];
+      const c = groupColor(gid);
+      const hl = selected === gid;
+      (g.rects || []).forEach(function (rc) {
+        const d = document.createElement("div");
+        d.className = "rect stealth" + (selected ? (hl ? " hl" : " dimmed") : "");
+        const x1 = Math.min(rc.x1, rc.x2), y1 = Math.min(rc.y1, rc.y2);
+        const x2 = Math.max(rc.x1, rc.x2), y2 = Math.max(rc.y1, rc.y2);
+        d.style.left = x1 + "px";
+        d.style.top = y1 + "px";
+        d.style.width = Math.max(1, x2 - x1) + "px";
+        d.style.height = Math.max(1, y2 - y1) + "px";
+        d.style.setProperty("--c", c);
+        d.style.setProperty("--cf", c + "22");
+        d.dataset.g = gid;
+        hotspotsDiv.appendChild(d);
+      });
+      (g.hotspots || []).forEach(function (h) {
+        const R = 15;
+        const d = document.createElement("div");
+        d.className = "hotspot stealth" + (selected ? (hl ? " hl" : " dimmed") : "");
+        d.style.left = (h.x - R) + "px";
+        d.style.top = (h.y - R) + "px";
+        d.style.width = (R * 2) + "px";
+        d.style.height = (R * 2) + "px";
+        d.style.background = c;
+        d.style.setProperty("--c", c);
+        d.dataset.g = gid;
+        hotspotsDiv.appendChild(d);
+      });
+      (g.paths || []).forEach(function (p) {
+        if (!p.length) return;
+        const poly = document.createElementNS(svgNS, "polyline");
+        poly.setAttribute("points", p.map(function (pt) { return pt.x + "," + pt.y; }).join(" "));
+        poly.setAttribute("stroke", c);
+        poly.style.setProperty("--c", c);
+        poly.setAttribute("class", "stealth" + (selected ? (hl ? " hl" : " dimmed") : ""));
+        poly.dataset.g = gid;
+        svgPaths.appendChild(poly);
+      });
+    });
+    renderSidebar();
+  }
+
+  function renderSidebar() {
+    groupList.innerHTML = "";
+    const gids = Object.keys(data);
+    if (!gids.length) {
+      const li = document.createElement("li");
+      li.textContent = "Aucun élément";
+      li.style.cursor = "default"; li.style.color = "#8aa2c4";
+      groupList.appendChild(li);
+      return;
+    }
+    gids.forEach(function (gid) {
+      const g = data[gid];
+      const li = document.createElement("li");
+      li.className = selected === gid ? "active" : "";
+      const dot = document.createElement("span");
+      dot.className = "dot";
+      dot.style.background = groupColor(gid);
+      dot.style.color = groupColor(gid);
+      const name = document.createElement("span");
+      name.className = "name"; name.textContent = "N° " + gid;
+      const count = document.createElement("span");
+      count.className = "count";
+      const rc = (g.rects || []).length;
+      count.textContent = (g.hotspots || []).length + "z / " + (g.paths || []).length + "c" + (rc ? " / " + rc + "r" : "");
+      li.appendChild(dot); li.appendChild(name); li.appendChild(count);
+      li.addEventListener("click", function () { selectGroup(gid); });
+      groupList.appendChild(li);
+    });
+  }
+
+  function selectGroup(gid) {
+    selected = gid;
+    render();
+  }
+
+  status.textContent = "Cliquez sur un numéro du plan pour mettre en surbrillance les éléments liés et leurs chemins. Molette = zoom, glisser = déplacer.";
+
+  viewport.addEventListener("wheel", function (e) {
+    e.preventDefault();
+    const r = viewport.getBoundingClientRect();
+    zoomAt(e.clientX - r.left, e.clientY - r.top, zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1));
+  }, { passive: false });
+
+  viewport.addEventListener("pointerdown", function (e) {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    viewport.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    moved = false;
+    downTarget = e.target;
+    if (pointers.size === 2) { pinchDist = null; panStart = null; return; }
+    panStart = { x: e.clientX, y: e.clientY, tx: tx, ty: ty };
+  });
+
+  viewport.addEventListener("pointermove", function (e) {
+    const p = pointers.get(e.pointerId);
+    if (!p) return;
+    const dx = e.clientX - p.x, dy = e.clientY - p.y;
+    if (Math.abs(dx) + Math.abs(dy) > 2) moved = true;
+
+    if (pointers.size === 2) {
+      const pts = Array.from(pointers.values());
+      pts.forEach(function (q) { if (q === p) { q.x = e.clientX; q.y = e.clientY; } });
+      const a = pts[0], b = pts[1];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      const midX = (a.x + b.x) / 2, midY = (a.y + b.y) / 2;
+      const r = viewport.getBoundingClientRect();
+      if (pinchDist) zoomAt(midX - r.left, midY - r.top, zoom * (dist / pinchDist));
+      pinchDist = dist;
+      panStart = null;
+      return;
+    }
+
+    if (panStart) {
+      tx = panStart.tx + (e.clientX - panStart.x);
+      ty = panStart.ty + (e.clientY - panStart.y);
+      viewport.classList.add("panning");
+      apply();
+    }
+  });
+
+  viewport.addEventListener("pointerup", function (e) {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    pointers.delete(e.pointerId);
+    viewport.classList.remove("panning");
+    if (pointers.size < 2) { pinchDist = null; }
+
+    if (panStart && !moved) {
+      const hs = downTarget && downTarget.closest ? downTarget.closest(".hotspot") : null;
+      if (hs) {
+        selectGroup(hs.dataset.g);
+      } else {
+        const rc = downTarget && downTarget.closest ? downTarget.closest(".rect") : null;
+        const poly = downTarget && downTarget.closest ? downTarget.closest("polyline") : null;
+        if (rc && rc.dataset.g) selectGroup(rc.dataset.g);
+        else if (poly && poly.dataset.g) selectGroup(poly.dataset.g);
+        else { selected = null; render(); }
+      }
+    }
+    panStart = null;
+    downTarget = null;
+  });
+
+  viewport.addEventListener("pointercancel", function (e) {
+    pointers.delete(e.pointerId);
+    viewport.classList.remove("panning");
+    panStart = null;
+  });
+
+  window.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { selected = null; render(); }
+  });
+
+  document.getElementById("btnFit").addEventListener("click", function () { if (hasImage) fit(); });
+
+  render();
+})();
+</script>
+</body>
+</html>
