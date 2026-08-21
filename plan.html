@@ -56,7 +56,7 @@
   }
   .hud button:hover { background: rgba(65,200,255,.2); }
 
-  #layout { display: flex; flex: 1; min-height: 0; }
+  #layout { display: flex; flex: 1; min-height: 0; position: relative; }
   aside {
     width: 230px; flex-shrink: 0;
     background: rgba(8,16,30,.85); border-right: 1px solid var(--line);
@@ -146,8 +146,24 @@
   }
   #notice .back2 { display: inline-block; margin-top: 20px; }
 
+  #btnMenu {
+    display: none;
+    font-family: 'Share Tech Mono', monospace; font-size: 12px; letter-spacing: 1px;
+    color: var(--cyan); background: rgba(65,200,255,.1);
+    border: 1px solid rgba(65,200,255,.35); border-radius: 6px; padding: 6px 12px; cursor: pointer;
+    white-space: nowrap;
+  }
   @media (max-width: 860px) {
-    aside { display: none; }
+    aside {
+      display: block;
+      position: absolute; top: 0; bottom: 0; left: 0; z-index: 30;
+      width: 250px; transform: translateX(-100%);
+      transition: transform .25s ease;
+      background: rgba(8,16,30,.98);
+      border-right: 1px solid var(--line);
+    }
+    aside.open { transform: translateX(0); box-shadow: 12px 0 40px rgba(0,0,0,.65); }
+    #btnMenu { display: inline-block; }
     header h1 { font-size: 14px; }
     .hud b { display: none; }
   }
@@ -157,6 +173,7 @@
 <header>
   <a class="back" href="index.html">← TABLEAU DE BORD</a>
   <a class="back" id="btnSections" href="#" style="display:none">← SECTIONS</a>
+  <button id="btnMenu">ÉLÉMENTS</button>
   <h1>EMERPLAN <span>// BOEING <span id="modelName">777</span></span></h1>
   <div class="hud">
     <span>STATUS : <b>STANDBY</b></span>
@@ -432,7 +449,10 @@
       const name = document.createElement("span");
       name.className = "name"; name.textContent = g.label || ("N° " + gid);
       li.appendChild(dot); li.appendChild(name);
-      li.addEventListener("click", function () { selectGroup(gid); });
+      li.addEventListener("click", function () {
+        selectGroup(gid);
+        document.querySelector("aside").classList.remove("open");
+      });
       groupList.appendChild(li);
     });
   }
@@ -522,6 +542,9 @@
   });
 
   document.getElementById("btnFit").addEventListener("click", function () { if (hasImage) fit(); });
+  document.getElementById("btnMenu").addEventListener("click", function () {
+    document.querySelector("aside").classList.toggle("open");
+  });
 
   render();
 })();
