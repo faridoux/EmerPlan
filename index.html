@@ -121,8 +121,12 @@
   .card:hover::before, .card:hover::after { width: 46px; height: 46px; opacity: 1; }
 
   .card .plane { width: 100%; height: 150px; display: flex; align-items: center; justify-content: center; }
-  .card .plane svg { width: 82%; height: auto; filter: drop-shadow(0 0 14px rgba(65,200,255,.25)); transition: filter .25s ease; }
-  .card:hover .plane svg { filter: drop-shadow(0 0 24px rgba(65,200,255,.55)); }
+  .card .plane img {
+    max-height: 128px; max-width: 78%;
+    filter: brightness(0) invert(1) drop-shadow(0 0 16px rgba(65,200,255,.45));
+    transition: filter .25s ease;
+  }
+  .card:hover .plane img { filter: brightness(0) invert(1) drop-shadow(0 0 26px rgba(65,200,255,.75)); }
 
   .card h3 {
     font-size: 36px; font-weight: 700; letter-spacing: 3px; margin-top: 14px;
@@ -213,13 +217,7 @@
   <section class="cards">
     <a class="card" href="plan.html?model=777-200">
       <div class="plane">
-        <svg viewBox="0 0 200 220" fill="#41c8ff">
-          <path d="M84 26 Q84 16 100 16 Q116 16 116 26 L116 190 Q116 200 100 200 Q84 200 84 190 Z"/>
-          <path d="M84 82 L28 102 L34 112 L84 96 Z"/>
-          <path d="M116 82 L172 102 L166 112 L116 96 Z"/>
-          <path d="M84 158 L56 174 L60 182 L84 168 Z"/>
-          <path d="M116 158 L144 174 L140 182 L116 168 Z"/>
-        </svg>
+        <img src="img/pngegg.png" alt="Boeing 777-200">
       </div>
       <h3>BOEING <span>777-200</span></h3>
       <div class="sub">PLAN D'ÉCLAIRAGE DE SECOURS INTERACTIF</div>
@@ -230,13 +228,7 @@
 
     <a class="card" href="plan.html?model=777-300">
       <div class="plane">
-        <svg viewBox="0 0 200 230" fill="#41c8ff">
-          <path d="M84 26 Q84 16 100 16 Q116 16 116 26 L116 200 Q116 210 100 210 Q84 210 84 200 Z"/>
-          <path d="M84 88 L28 108 L34 118 L84 102 Z"/>
-          <path d="M116 88 L172 108 L166 118 L116 102 Z"/>
-          <path d="M84 164 L56 180 L60 188 L84 174 Z"/>
-          <path d="M116 164 L144 180 L140 188 L116 174 Z"/>
-        </svg>
+        <img src="img/pngegg.png" alt="Boeing 777-300">
       </div>
       <h3>BOEING <span>777-300</span></h3>
       <div class="sub">PLAN D'ÉCLAIRAGE DE SECOURS INTERACTIF</div>
