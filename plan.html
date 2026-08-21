@@ -156,6 +156,7 @@
 <body>
 <header>
   <a class="back" href="index.html">← TABLEAU DE BORD</a>
+  <a class="back" id="btnSections" href="#" style="display:none">← SECTIONS</a>
   <h1>EMERPLAN <span>// BOEING <span id="modelName">777</span></span></h1>
   <div class="hud">
     <span>STATUS : <b>STANDBY</b></span>
@@ -220,6 +221,12 @@
 
   document.getElementById("modelName").textContent = model;
   document.title = "EmerPlan — Boeing " + model;
+
+  if (section) {
+    const bs = document.getElementById("btnSections");
+    bs.style.display = "";
+    bs.setAttribute("href", "plan.html?model=" + encodeURIComponent(model));
+  }
 
   if (MODELS.indexOf(model) === -1) {
     showNotice("APPAREIL INCONNU", "Le modèle « " + model + " » n'existe pas dans la flotte. Retournez au tableau de bord pour choisir un appareil.");
