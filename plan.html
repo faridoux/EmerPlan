@@ -188,9 +188,13 @@
   "use strict";
 
   const MODELS = ["777-200", "777-300"];
-  const model = new URLSearchParams(location.search).get("model") || "777-200";
-  const IMG = "plans/" + model + "/plan.png";
-  const DATA_URL = "plans/" + model + "/donnees.json";
+  const params = new URLSearchParams(location.search);
+  const model = params.get("model") || "777-200";
+  const section = params.get("section") || "";
+  let SECTION_NAME = section;
+  let chooserOpen = false;
+  const IMG = section ? "plans/" + model + "/" + section + "/plan.png" : "plans/" + model + "/plan.png";
+  const DATA_URL = section ? "plans/" + model + "/" + section + "/donnees.json" : "plans/" + model + "/donnees.json";
 
   const viewport = document.getElementById("viewport");
   const world = document.getElementById("world");
@@ -226,6 +230,51 @@
     notice.classList.add("open");
   }
 
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function showChooser(sections) {
+    chooserOpen = true;
+    document.getElementById("modelName").textContent = model + " · SECTIONS";
+    let html = '<div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:14px">';
+    sections.forEach(function (s) {
+      html += '<a class="back back2" style="margin:0;font-size:15px;padding:10px 22px" href="plan.html?model=' +
+        encodeURIComponent(model) + '&section=' + encodeURIComponent(s.id) + '">' + escapeHtml(s.name) + '</a>';
+    });
+    html += '</div>';
+    showNotice("CHOISISSEZ UNE SECTION", "Cet appareil contient plusieurs plans :" + html);
+  }
+
+  function resolveSectionName() {
+    fetch("plans/" + model + "/sections.json")
+      .then(function (r) { if (!r.ok) throw new Error("no"); return r.json(); })
+      .then(function (list) {
+        if (Array.isArray(list)) {
+          const s = list.find(function (x) { return x.id === section; });
+          if (s && s.name) {
+            SECTION_NAME = s.name;
+            document.getElementById("modelName").textContent = model + " · " + SECTION_NAME;
+            document.title = "EmerPlan — Boeing " + model + " · " + SECTION_NAME;
+          }
+        }
+      })
+      .catch(function () {});
+  }
+
+  if (!section) {
+    fetch("plans/" + model + "/sections.json")
+      .then(function (r) { if (!r.ok) throw new Error("no"); return r.json(); })
+      .then(function (sections) {
+        if (Array.isArray(sections) && sections.length) showChooser(sections);
+      })
+      .catch(function () {});
+  } else {
+    resolveSectionName();
+  }
+
   function initImage() {
     W = planImg.naturalWidth; H = planImg.naturalHeight;
     world.style.width = W + "px"; world.style.height = H + "px";
@@ -235,6 +284,7 @@
   }
   planImg.addEventListener("load", initImage);
   planImg.addEventListener("error", function () {
+    if (chooserOpen) return;
     showNotice(
       "PLAN EN PRÉPARATION",
       "Le plan interactif du Boeing " + model + " sera bientôt disponible.<br>Ajoutez l'image du plan dans <code>plans/" + model + "/plan.png</code>.<br><br>Ouvrez cette page via un serveur (ex. GitHub Pages) pour charger l'image."

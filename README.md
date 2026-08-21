@@ -11,6 +11,21 @@ Tableau de bord et plans d'urgence interactifs (flotte Boeing 777), en lecture s
 | `editeur.html` | Éditeur **local** : définir zones, chemins et rectangles puis exporter le JSON |
 | `plans/777-200/` `plans/777-300/` | Un dossier par appareil |
 
+## Structure des plans (plusieurs sections par appareil)
+
+```
+plans/777-200/
+  sections.json        -> [{ "id": "fwd", "name": "Avant (FWD)" }, { "id": "aft", "name": "Arrière (AFT)" }]
+  fwd/
+    plan.png           -> image du plan
+    donnees.json       -> éléments interactifs
+  aft/
+    plan.png
+    donnees.json
+```
+
+S'il y a plusieurs sections, `plan.html?model=777-200` affiche un choix de sections. Une seule section = pas de `sections.json` (accès direct).
+
 ## Intégrer un plan
 
 Pour chaque appareil (ex. `777-200`), déposer dans `plans/777-200/` :
