@@ -143,6 +143,8 @@
     box-shadow: 0 0 8px var(--amber);
     animation: pulse 1.6s ease-in-out infinite;
   }
+  .chip.ready { border-color: rgba(65,200,255,.55); color: var(--cyan); }
+  .chip.ready::before { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
   .cta {
     margin-top: 26px; font-size: 18px; letter-spacing: 3px; color: var(--cyan);
     display: inline-flex; align-items: center; gap: 10px;
@@ -225,7 +227,7 @@
       </div>
       <h3>BOEING <span>777-200</span></h3>
       <div class="sub">PLAN D'URGENCE INTERACTIF</div>
-      <div class="chip">EN PRÉPARATION</div>
+      <div class="chip ready">DISPONIBLE</div>
       <div class="cta-line"></div>
       <div class="cta">ACCÉDER AU PLAN <span class="arr">→</span></div>
     </a>
