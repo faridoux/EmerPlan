@@ -372,11 +372,7 @@
       dot.style.color = groupColor(gid);
       const name = document.createElement("span");
       name.className = "name"; name.textContent = g.label || ("N° " + gid);
-      const count = document.createElement("span");
-      count.className = "count";
-      const rc = (g.rects || []).length;
-      count.textContent = (g.hotspots || []).length + "z / " + (g.paths || []).length + "c" + (rc ? " / " + rc + "r" : "");
-      li.appendChild(dot); li.appendChild(name); li.appendChild(count);
+      li.appendChild(dot); li.appendChild(name);
       li.addEventListener("click", function () { selectGroup(gid); });
       groupList.appendChild(li);
     });
