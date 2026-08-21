@@ -320,6 +320,7 @@
       col.className = "colorpick";
       col.value = groupColor(gid);
       col.title = "Changer la couleur du groupe " + gid;
+      col.addEventListener("click", function (ev) { ev.stopPropagation(); });
       col.addEventListener("input", function () {
         data[gid].color = col.value;
         save(); render();
@@ -330,15 +331,12 @@
       name.value = g.label || "";
       name.placeholder = "N° " + gid;
       name.title = "Nom du groupe (ex : M33093)";
+      name.addEventListener("click", function (ev) { ev.stopPropagation(); });
       name.addEventListener("change", function () {
         const v = name.value.trim();
         if (v) data[gid].label = v; else delete data[gid].label;
         save();
       });
-      const count = document.createElement("span");
-      count.className = "count";
-      const rc = (g.rects || []).length;
-      count.textContent = (g.hotspots || []).length + "z / " + (g.paths || []).length + "c" + (rc ? " / " + rc + "r" : "");
       const del = document.createElement("button");
       del.className = "del"; del.textContent = "x"; del.title = "Supprimer ce groupe";
       del.addEventListener("click", function (ev) {
@@ -348,7 +346,7 @@
         if (selected === gid) selected = null;
         save(); render();
       });
-      li.appendChild(col); li.appendChild(name); li.appendChild(count); li.appendChild(del);
+      li.appendChild(col); li.appendChild(name); li.appendChild(del);
       li.addEventListener("click", function () { selectGroup(gid); });
       groupList.appendChild(li);
     });
