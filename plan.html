@@ -154,6 +154,13 @@
     white-space: nowrap;
   }
   @media (max-width: 860px) {
+    header { height: auto; flex-wrap: wrap; gap: 6px 8px; padding: 8px 10px; }
+    header h1 { flex-basis: 100%; order: 10; font-size: 12px; letter-spacing: 1px; margin-top: 2px; }
+    .back { font-size: 11px; padding: 5px 8px; }
+    .hud { margin-left: auto; gap: 6px; }
+    .hud span { display: none; }
+    .hud button { font-size: 11px; padding: 5px 10px; }
+    #btnMenu { display: inline-block; }
     aside {
       display: block;
       position: absolute; top: 0; bottom: 0; left: 0; z-index: 30;
@@ -163,9 +170,6 @@
       border-right: 1px solid var(--line);
     }
     aside.open { transform: translateX(0); box-shadow: 12px 0 40px rgba(0,0,0,.65); }
-    #btnMenu { display: inline-block; }
-    header h1 { font-size: 14px; }
-    .hud b { display: none; }
   }
 </style>
 </head>
@@ -173,10 +177,10 @@
 <header>
   <a class="back" href="index.html">← TABLEAU DE BORD</a>
   <a class="back" id="btnSections" href="#" style="display:none">← SECTIONS</a>
-  <button id="btnMenu">ÉLÉMENTS</button>
   <h1>EMERPLAN <span>// BOEING <span id="modelName">777</span></span></h1>
   <div class="hud">
     <span>STATUS : <b>STANDBY</b></span>
+    <button id="btnMenu">ÉLÉMENTS</button>
     <button id="btnFit">AJUSTER</button>
   </div>
 </header>
