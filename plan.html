@@ -128,12 +128,14 @@
     display: none; position: absolute; inset: 0; z-index: 10;
     align-items: center; justify-content: center; text-align: center;
     background: rgba(4,7,15,.82);
+    touch-action: auto;
   }
   #notice.open { display: flex; }
   #notice .box {
     max-width: 560px; padding: 40px 46px;
     border: 1px solid rgba(65,200,255,.35); border-radius: 14px;
     background: linear-gradient(165deg, rgba(16,34,62,.85), rgba(7,15,30,.9));
+    touch-action: auto;
   }
   #notice h2 { font-size: 26px; letter-spacing: 2px; color: var(--cyan); margin-bottom: 14px; }
   #notice p { color: var(--dim); font-size: 16px; line-height: 1.7; }
@@ -480,6 +482,7 @@
   });
 
   viewport.addEventListener("pointerup", function (e) {
+    if (e.target && e.target.closest && e.target.closest("#notice")) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
     pointers.delete(e.pointerId);
     viewport.classList.remove("panning");
