@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Plan Ã©lectrique interactif</title>
+<title>EmerPlan — Éditeur (local)</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; overflow: hidden; font-family: Segoe UI, Arial, sans-serif; background: #1e1f22; color: #e8e8e8; }
@@ -86,7 +86,7 @@
 </head>
 <body>
 <header>
-  <h1>Plan Ã©lectrique interactif</h1>
+  <h1>Plan électrique interactif</h1>
   <div class="tools">
     <button id="btnPan" class="active">Naviguer</button>
     <button id="btnHotspot">Ajouter zones</button>
@@ -117,14 +117,14 @@
   <div class="box">
     <h2>Mode d'emploi</h2>
     <ul>
-      <li><b>Naviguer</b> : glisser = dÃ©placer, molette = zoomer, clic sur un chiffre = surbrillance du groupe.</li>
-      <li><b>Ajouter zones</b> : cliquer sur le plan pour poser une zone (saisir le numÃ©ro du groupe, ex. 1, 2, L1...). Glisser une zone = la dÃ©placer. Clic droit dessus = la supprimer.</li>
-      <li><b>Tracer chemins</b> : cliquer pour poser les points du chemin (le fil), double-clic = terminer et saisir le numÃ©ro du groupe. Clic droit = retirer le dernier point. Ã‰chap = annuler.</li>
-      <li><b>Ajouter rectangles</b> : cliquez-glissez pour dessiner un rectangle, relÃ¢chez et saisissez le numÃ©ro du groupe. Il entrera en surbrillance avec les autres Ã©lÃ©ments du mÃªme numÃ©ro.</li>
-      <li><b>Supprimer</b> : clic droit sur un chemin ou un rectangle (dans n'importe quel mode) = le supprimer. En mode Â« Ajouter zones Â», clic droit sur une zone = la supprimer. Le Â« x Â» du menu de gauche supprime un groupe entier.</li>
-      <li>En navigation, les chemins sont invisibles tant qu'aucun groupe n'est sÃ©lectionnÃ© ; passez en mode Â« Tracer chemins Â» ou Â« Ajouter zones Â» pour tous les voir.</li>
-      <li><b>Surbrillance</b> : cliquer sur une zone (ou un groupe Ã  gauche) met en Ã©vidence toutes les zones et chemins portant le mÃªme numÃ©ro ; le reste est estompÃ©. Cliquez dans le vide ou appuyez sur Ã‰chap pour dÃ©sactiver.</li>
-      <li>Les donnÃ©es sont sauvegardÃ©es automatiquement dans le navigateur. <b>Exporter</b> enregistre un fichier .json de sauvegarde.</li>
+      <li><b>Naviguer</b> : glisser = déplacer, molette = zoomer, clic sur un chiffre = surbrillance du groupe.</li>
+      <li><b>Ajouter zones</b> : cliquer sur le plan pour poser une zone (saisir le numéro du groupe, ex. 1, 2, L1...). Glisser une zone = la déplacer. Clic droit dessus = la supprimer.</li>
+      <li><b>Tracer chemins</b> : cliquer pour poser les points du chemin (le fil), double-clic = terminer et saisir le numéro du groupe. Clic droit = retirer le dernier point. Échap = annuler.</li>
+      <li><b>Ajouter rectangles</b> : cliquez-glissez pour dessiner un rectangle, relâchez et saisissez le numéro du groupe. Il entrera en surbrillance avec les autres éléments du même numéro.</li>
+      <li><b>Supprimer</b> : clic droit sur un chemin ou un rectangle (dans n'importe quel mode) = le supprimer. En mode « Ajouter zones », clic droit sur une zone = la supprimer. Le « x » du menu de gauche supprime un groupe entier.</li>
+      <li>En navigation, les chemins sont invisibles tant qu'aucun groupe n'est sélectionné ; passez en mode « Tracer chemins » ou « Ajouter zones » pour tous les voir.</li>
+      <li><b>Surbrillance</b> : cliquer sur une zone (ou un groupe à gauche) met en évidence toutes les zones et chemins portant le même numéro ; le reste est estompé. Cliquez dans le vide ou appuyez sur Échap pour désactiver.</li>
+      <li>Les données sont sauvegardées automatiquement dans le navigateur. <b>Exporter</b> enregistre un fichier .json de sauvegarde.</li>
     </ul>
     <button id="btnCloseHelp">Fermer</button>
   </div>
@@ -290,7 +290,7 @@
     const gids = Object.keys(data);
     if (!gids.length) {
       const li = document.createElement("li");
-      li.textContent = "Aucun groupe dÃ©fini";
+      li.textContent = "Aucun groupe défini";
       li.style.cursor = "default"; li.style.color = "#9a9ba0";
       groupList.appendChild(li);
       return;
@@ -302,7 +302,7 @@
       const dot = document.createElement("span");
       dot.className = "dot"; dot.style.background = groupColor(gid);
       const name = document.createElement("span");
-      name.className = "name"; name.textContent = "NÂ° " + gid;
+      name.className = "name"; name.textContent = g.label || ("N° " + gid);
       const count = document.createElement("span");
       count.className = "count";
       const rc = (g.rects || []).length;
@@ -342,12 +342,12 @@
   }
 
   function updateStatus() {
-    if (mode === "hotspot") status.textContent = "Mode zones : clic = poser une zone, glisser = dÃ©placer, clic droit = supprimer. Cliquez un bouton du haut pour revenir Ã  la navigation.";
-    else if (mode === "rect") status.textContent = "Mode rectangles : cliquez-glissez pour dessiner le rectangle, puis saisissez le numÃ©ro du groupe. Clic droit sur un rectangle = le supprimer.";
+    if (mode === "hotspot") status.textContent = "Mode zones : clic = poser une zone, glisser = déplacer, clic droit = supprimer. Cliquez un bouton du haut pour revenir à la navigation.";
+    else if (mode === "rect") status.textContent = "Mode rectangles : cliquez-glissez pour dessiner le rectangle, puis saisissez le numéro du groupe. Clic droit sur un rectangle = le supprimer.";
     else if (mode === "path") status.textContent = drawing.length
-      ? "Mode chemins : " + drawing.length + " point(s) posÃ©(s) - double-clic pour terminer, clic droit = dernier point, Ã‰chap = annuler."
+      ? "Mode chemins : " + drawing.length + " point(s) posé(s) - double-clic pour terminer, clic droit = dernier point, Échap = annuler."
       : "Mode chemins : clic = poser un point - double-clic pour terminer et nommer le groupe.";
-    else status.textContent = "Cliquez sur un chiffre pour faire apparaÃ®tre en surbrillance tous les Ã©lÃ©ments liÃ©s et leurs chemins. Molette = zoom, glisser = dÃ©placer.";
+    else status.textContent = "Cliquez sur un chiffre pour faire apparaître en surbrillance tous les éléments liés et leurs chemins. Molette = zoom, glisser = déplacer.";
   }
 
   function clearPreview() {
@@ -384,7 +384,7 @@
   }
 
   function promptGroup(action) {
-    const v = prompt(action + " - numÃ©ro du groupe (ex : 1, 2, L1) :", "");
+    const v = prompt(action + " - numéro du groupe (ex : 1, 2, L1) :", "");
     if (v === null || !v.trim()) return null;
     return v.trim();
   }
@@ -398,7 +398,7 @@
 
   function finishPath() {
     if (drawing.length < 2) { drawing = []; clearPreview(); updateStatus(); return; }
-    const gid = promptGroup("Chemin terminÃ©");
+    const gid = promptGroup("Chemin terminé");
     if (!gid) { drawing = []; clearPreview(); updateStatus(); return; }
     const pts = drawing.map(function (p) { return { x: Math.round(p.x), y: Math.round(p.y) }; });
     const cleaned = pts.filter(function (pt, i) {
@@ -638,7 +638,7 @@
     rd.onload = function () {
       try {
         const d = JSON.parse(rd.result);
-        if (!confirm("Importer et remplacer les donnÃ©es actuelles ?")) return;
+        if (!confirm("Importer et remplacer les données actuelles ?")) return;
         data = d || {};
         selected = null;
         save(); render();

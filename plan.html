@@ -371,7 +371,7 @@
       dot.style.background = groupColor(gid);
       dot.style.color = groupColor(gid);
       const name = document.createElement("span");
-      name.className = "name"; name.textContent = "N° " + gid;
+      name.className = "name"; name.textContent = g.label || ("N° " + gid);
       const count = document.createElement("span");
       count.className = "count";
       const rc = (g.rects || []).length;
