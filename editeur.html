@@ -97,6 +97,12 @@
   #helpPanel ul { margin: 8px 0 8px 20px; }
   #helpPanel button { margin-top: 12px; padding: 7px 16px; border-radius: 6px; border: 1px solid #4a4b50; background: #2f6fed; color: #fff; cursor: pointer; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+</script>
 </head>
 <body>
 <header>
@@ -109,6 +115,7 @@
     <button id="btnFit">Ajuster</button>
     <button id="btnExport">Exporter</button>
     <button id="btnImport">Importer</button>
+    <button id="btnImportPdf">Importer PDF</button>
     <button id="btnClear">Tout effacer</button>
     <button id="btnHelp">Aide</button>
   </div>
@@ -139,16 +146,19 @@
       <li>En navigation, les chemins sont invisibles tant qu'aucun groupe n'est sélectionné ; passez en mode « Tracer chemins » ou « Ajouter zones » pour tous les voir.</li>
       <li><b>Surbrillance</b> : cliquer sur une zone (ou un groupe à gauche) met en évidence toutes les zones et chemins portant le même numéro ; le reste est estompé. Cliquez dans le vide ou appuyez sur Échap pour désactiver.</li>
       <li>Les données sont sauvegardées automatiquement dans le navigateur. <b>Exporter</b> enregistre un fichier .json de sauvegarde.</li>
+      <li><b>Importer PDF</b> : charge un fichier PDF, transforme sa première page en image et l'utilise comme fond (connexion internet requise pour la conversion). Conseil : « Tout effacer » avant de tracer un nouveau plan.</li>
     </ul>
     <button id="btnCloseHelp">Fermer</button>
   </div>
 </div>
 <input type="file" id="fileInput" accept=".json" style="display:none">
+<input type="file" id="filePdfInput" accept=".pdf" style="display:none">
 <script>
 (function () {
   "use strict";
 
   const STORAGE_KEY = "plan_interactif_data";
+  const PLAN_IMG_KEY = "plan_interactif_image";
   const HOTSPOT_R = 15;
   const PALETTE = ["#e6194B","#3cb44b","#ffe119","#4363d8","#f58231","#911eb4","#42d4f4","#f032e6","#bfef45","#469990","#dcbeff","#9A6324","#800000","#aaffc3","#808000","#ffd8b1","#000075","#f582c0","#00b0a0","#a9a9a9"];
 
@@ -176,6 +186,11 @@
   let rectPreviewEl = null;
 
   try { data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") || {}; } catch (e) { data = {}; }
+
+  try {
+    const storedImg = localStorage.getItem(PLAN_IMG_KEY);
+    if (storedImg) planImg.src = storedImg;
+  } catch (e) {}
 
   function initImage() {
     W = planImg.naturalWidth; H = planImg.naturalHeight;
@@ -677,6 +692,45 @@
     rd.readAsText(f);
     e.target.value = "";
   });
+
+  document.getElementById("btnImportPdf").addEventListener("click", function () {
+    document.getElementById("filePdfInput").click();
+  });
+  document.getElementById("filePdfInput").addEventListener("change", function (e) {
+    const f = e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    if (typeof pdfjsLib === "undefined") {
+      alert("La bibliothèque PDF n'est pas chargée. Vérifiez votre connexion internet et rechargez la page.");
+      return;
+    }
+    const rd = new FileReader();
+    rd.onload = function () {
+      status.textContent = "Lecture du PDF…";
+      pdfjsLib.getDocument({ data: rd.result }).promise
+        .then(function (pdf) { return pdf.getPage(1); })
+        .then(function (page) {
+          const base = page.getViewport({ scale: 1 });
+          const scale = 2200 / base.width;
+          const vp = page.getViewport({ scale: scale });
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(vp.width);
+          canvas.height = Math.round(vp.height);
+          const ctx = canvas.getContext("2d");
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          return page.render({ canvasContext: ctx, viewport: vp }).promise.then(function () {
+            const url = canvas.toDataURL("image/png");
+            try { localStorage.setItem(PLAN_IMG_KEY, url); } catch (err) {}
+            planImg.onload = function () { initImage(); status.textContent = "PDF chargé. Astuce : « Tout effacer » puis tracez vos zones."; };
+            planImg.src = url;
+          });
+        })
+        .catch(function (err) { alert("Impossible de lire le PDF : " + err.message); status.textContent = ""; });
+    };
+    rd.readAsArrayBuffer(f);
+  });
+
 
   document.getElementById("btnClear").addEventListener("click", function () {
     if (!Object.keys(data).length) return;
