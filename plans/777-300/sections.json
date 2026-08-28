@@ -1,3 +1,4 @@
 [
-  { "id": "fwd", "name": "Avant (FWD)" }
+  { "id": "fwd", "name": "Avant (FWD)" },
+  { "id": "aft", "name": "Arrière (AFT)" }
 ]
