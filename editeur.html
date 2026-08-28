@@ -114,8 +114,9 @@
     <button id="btnPath">Tracer chemins</button>
     <button id="btnFit">Ajuster</button>
     <button id="btnExport">Exporter</button>
-    <button id="btnImport">Importer</button>
+    <button id="btnImport">Importer JSON</button>
     <button id="btnImportPdf">Importer PDF</button>
+    <button id="btnImportImg">Image fond</button>
     <button id="btnClear">Tout effacer</button>
     <button id="btnHelp">Aide</button>
   </div>
@@ -147,12 +148,14 @@
       <li><b>Surbrillance</b> : cliquer sur une zone (ou un groupe à gauche) met en évidence toutes les zones et chemins portant le même numéro ; le reste est estompé. Cliquez dans le vide ou appuyez sur Échap pour désactiver.</li>
       <li>Les données sont sauvegardées automatiquement dans le navigateur. <b>Exporter</b> enregistre un fichier .json de sauvegarde.</li>
       <li><b>Importer PDF</b> : charge un fichier PDF, transforme sa première page en image et l'utilise comme fond (connexion internet requise pour la conversion). Conseil : « Tout effacer » avant de tracer un nouveau plan.</li>
+      <li><b>Image fond</b> : charge directement un fichier image (PNG/JPG) comme fond du plan, sans conversion. Pratique si vous avez déjà le scan en image.</li>
     </ul>
     <button id="btnCloseHelp">Fermer</button>
   </div>
 </div>
 <input type="file" id="fileInput" accept=".json" style="display:none">
 <input type="file" id="filePdfInput" accept=".pdf" style="display:none">
+<input type="file" id="fileImgInput" accept="image/*" style="display:none">
 <script>
 (function () {
   "use strict";
@@ -729,6 +732,23 @@
         .catch(function (err) { alert("Impossible de lire le PDF : " + err.message); status.textContent = ""; });
     };
     rd.readAsArrayBuffer(f);
+  });
+
+  document.getElementById("btnImportImg").addEventListener("click", function () {
+    document.getElementById("fileImgInput").click();
+  });
+  document.getElementById("fileImgInput").addEventListener("change", function (e) {
+    const f = e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    const rd = new FileReader();
+    rd.onload = function () {
+      const url = rd.result;
+      try { localStorage.setItem(PLAN_IMG_KEY, url); } catch (err) {}
+      planImg.onload = function () { initImage(); status.textContent = "Image de fond chargée. Astuce : « Tout effacer » puis tracez vos zones."; };
+      planImg.src = url;
+    };
+    rd.readAsDataURL(f);
   });
 
 
